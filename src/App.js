@@ -1,23 +1,44 @@
-import logo from './logo.svg';
-import './App.css';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useRef, useState } from "react";
+import "./App.css";
+import Card from "./components/card";
+import useInfiniteScroll from "./hooks/useInfiniteScroll";
+import getCards from "./queries/query";
 
 function App() {
+  const [pageNumber, setPageNumber] = useState(1);
+  const [cards, setCards] = useState([]);
+  const cardsListRef = useRef(null);
+
+  const onBottomReached = () => {
+    setPageNumber(pageNumber + 1);
+  };
+
+  useInfiniteScroll(cardsListRef, onBottomReached);
+
+  useEffect(() => {
+    const updateCards = async () => {
+      const updatedCards = await getCards(pageNumber);
+      setCards([...cards, ...updatedCards]);
+    };
+    updateCards();
+  }, [pageNumber]);
+  console.log(cards.length);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h2 className="heading">Cards Project</h2>
+      {cards.length > 0 ? (
+        <div className="cards-list" ref={cardsListRef}>
+          {cards.map((card) => (
+            <Card title={card.title} body={card.body} />
+          ))}
+          <div className="loader">Loading ...</div>
+        </div>
+      ) : (
+        <div className="no-records">
+          <h3>Loading ....</h3>
+        </div>
+      )}
     </div>
   );
 }
